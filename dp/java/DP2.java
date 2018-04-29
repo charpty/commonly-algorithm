@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 /**
  * 求字符串A转换为字符串B的最少编辑次数，也就是编辑距离
  *
@@ -23,10 +21,17 @@ import java.util.Arrays;
  */
 class DP2 {
 
+	private static final String ACTION_NO_CHANGE = "不修改";
+	private static final String ACTION_INSERT_A = "在A中插入";
+	private static final String ACTION_INSERT_B = "在B中插入";
+	private static final String ACTION_MODIFY = "修改";
+	private static final String ACTION_DELETE_A = "删除当前A";
+	private static final String ACTION_DELETE_B = "删除当前B";
+
 	public static void main(String[] args) {
 
 		String str1 = "abc";
-		String str2 = "abcde";
+		String str2 = "aoooo";
 
 		char[] A = str1.toCharArray();
 		char[] B = str2.toCharArray();
@@ -51,40 +56,80 @@ class DP2 {
 		// 边界的dp都求完了，开始计算中间行与中间列
 		for (int i = 1; i < dp.length; i++) {
 			for (int j = 1; j < dp[i].length; j++) {
-				int insert = Math.min(dp[i - 1][j], dp[i][j - 1]) + 1;
+
+				// 用了许多变量为了说明逻辑语义
+				int insertA = dp[i][j - 1] + 1;
+				int insertB = dp[i - 1][j] + 1;
 				int modify = dp[i - 1][j - 1] + 1;
-				int delete = Math.min(dp[i - 1][j], dp[i][j - 1]) + 1;
+				int deleteA = dp[i - 1][j] + 1;
+				int deleteB = dp[i][j - 1] + 1;
 				int noChange = Integer.MAX_VALUE;
 				// 注意下dp[1][1]代表的长度为1的A、B字符串的比较，也就是A[0]、B[0]
 				if (A[i - 1] == B[j - 1]) {
 					noChange = dp[i - 1][j - 1];
 				}
-				dp[i][j] = minAction(insert, modify, delete, noChange);
+
+				// 比较取出最小值并记录选择结果，比较简单且冗长就单独提出，考虑扩展性所以使用数组
+				int[] values = new int[] { noChange, insertA, insertB, modify, deleteA, deleteB };
+				String[] actions = new String[] { ACTION_NO_CHANGE, ACTION_INSERT_A, ACTION_INSERT_B, ACTION_MODIFY, ACTION_DELETE_A, ACTION_DELETE_B };
+				Object[] r = minAction(values, actions);
+				dp[i][j] = (int) r[0];
+				choose[i][j] = (String) r[1];
 			}
 		}
-		print(dp);
+		printAction(choose, A.length, B.length);
 		System.out.println("字符串编辑距离：" + dp[A.length][B.length]);
 	}
 
-	public static int minAction(int insert, int modify, int delete, int noChange) {
-		int min = noChange;
-		if (min > insert) {
-			min = insert;
+	//
+	public static Object[] minAction(int[] values, String[] actions) {
+		Object[] result = new Object[2];
+		result[0] = values[0];
+		result[1] = actions[0];
+
+		for (int i = 1; i < values.length; i++) {
+			if (values[i] < (int) result[0]) {
+				result[0] = values[i];
+				result[1] = actions[i];
+			}
 		}
-		if (min > modify) {
-			min = modify;
-		}
-		if (min > delete) {
-			min = delete;
-		}
-		return min;
+		return result;
 	}
 
-	public static void print(int[][] dp) {
-		for (int i = 0; i < dp.length; i++) {
-			int[] arr = dp[i];
-			for (int j = 0; j < arr.length; j++) {
-				System.out.print(arr[j] + ",");
+	// 反向推导出选择路径，为了简单直接使用ACTION内容作为判断依据
+	public static void printAction(String[][] dp, int lenA, int lenB) {
+		String[] actions = new String[lenA > lenB ? lenA : lenB];
+		actions[0] = dp[lenA][lenB];
+
+		// 可以用个map规定下逻辑
+		for (int i = 1; i < actions.length; i++) {
+			if (lenA == 0 && lenB == 0) {
+				break;
+			}
+			String prev = actions[i - 1];
+			switch (prev) {
+			case ACTION_NO_CHANGE:
+			case ACTION_MODIFY:
+				actions[i] = dp[--lenA][--lenB];
+				break;
+			case ACTION_INSERT_A:
+			case ACTION_DELETE_B:
+				actions[i] = dp[lenA][--lenB];
+				break;
+			case ACTION_INSERT_B:
+			case ACTION_DELETE_A:
+				actions[i] = dp[--lenA][lenB];
+				break;
+			}
+		}
+
+		for (int i = (actions.length - 1); i >= 0; i--) {
+			if (actions[i] == null) {
+				continue;
+			}
+			System.out.print(actions[i]);
+			if (i != 0) {
+				System.out.print(" -> ");
 			}
 		}
 		System.out.println();

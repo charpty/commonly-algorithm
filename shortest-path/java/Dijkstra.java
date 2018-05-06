@@ -1,6 +1,3 @@
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * 求有向带权图G=(V,E)中某个顶点到另一个顶点的最短路径问题
  *
@@ -29,24 +26,19 @@ public class Dijkstra {
 			dist[i] = E[x][i];
 		}
 
-		Set<Integer> u = new HashSet<>();
-		for (int i = 1; i < N; i++) {
-			u.add(i);
-		}
-		Set<Integer> s = new HashSet<>();
-		s.add(0);
+		int[] inUSet = new int[N];
+		inUSet[0] = 1;
 
-		for (int c = 0; !u.isEmpty(); ) {
+		for (int c = 1; c < N; c++) {
 			int min = UNREACHABLE;
 			int index = -1;
 			for (int i = 0; i < dist.length; i++) {
-				if (dist[i] < min && !s.contains(i)) {
+				if (dist[i] < min && inUSet[i] == 0) {
 					min = dist[i];
 					index = i;
 				}
 			}
-			s.add(index);
-			u.remove(index);
+			inUSet[index] = 1;
 			// 新加入的节点总会引起新的路径变化
 			for (int i = 0; i < E[index].length; i++) {
 				if (E[index][i] < UNREACHABLE) {

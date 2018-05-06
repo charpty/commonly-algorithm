@@ -1,3 +1,5 @@
+import java.time.Year;
+
 /**
  * 求有向带权图G=(V,E)中某个顶点到另一个顶点的最短路径问题
  *
@@ -7,7 +9,7 @@
 public class Dijkstra {
 
 	// 我们总是从0开始给顶点编号
-	private static final int N = 5;
+	private static final int N = 9;
 	private static final int[][] E = new int[N][N];
 
 	private static int UNREACHABLE = Integer.MAX_VALUE;
@@ -19,7 +21,7 @@ public class Dijkstra {
 
 	public static void main(String[] args) {
 		// 求顶点x到顶点y的距离
-		int x = 0, y = 4;
+		int x = 1, y = 0;
 
 		int dist[] = new int[E[x].length];
 		for (int i = 0; i < E[x].length; i++) {
@@ -27,8 +29,11 @@ public class Dijkstra {
 		}
 
 		int[] inUSet = new int[N];
-		inUSet[0] = 1;
-
+		inUSet[x] = 1;
+		int[] from = new int[N];
+		for (int i = 0; i < from.length; i++) {
+			from[i] = x;
+		}
 		for (int c = 1; c < N; c++) {
 			int min = UNREACHABLE;
 			int index = -1;
@@ -38,6 +43,10 @@ public class Dijkstra {
 					index = i;
 				}
 			}
+			if (index < 0) {
+				// 存在节点是不可达的
+				break;
+			}
 			inUSet[index] = 1;
 			// 新加入的节点总会引起新的路径变化
 			for (int i = 0; i < E[index].length; i++) {
@@ -45,11 +54,33 @@ public class Dijkstra {
 					int newPath = dist[index] + E[index][i];
 					if (newPath < dist[i]) {
 						dist[i] = newPath;
+						from[i] = index;
 					}
 				}
 			}
 		}
+		printPath(from, x, y);
 		System.out.println("最短路径大小：" + dist[y]);
+	}
+
+	private static void printPath(int[] from, int x, int y) {
+		String[] actions = new String[N];
+		int i = 0;
+		for (; y != x; ) {
+			actions[i++] = "选择[" + y + "]";
+			y = from[y];
+		}
+		actions[i] = "从[" + x + "]号节点出发";
+
+		for (int c = actions.length - 1; c >= 0; c--) {
+			if (actions[c] != null) {
+				System.out.print(actions[c]);
+				if (c != 0) {
+					System.out.print(" -> ");
+				}
+			}
+		}
+		System.out.println();
 	}
 
 	private static void initE() {
@@ -62,8 +93,15 @@ public class Dijkstra {
 		E[0][1] = 1;
 		E[0][2] = 5;
 		E[1][3] = 2;
-		E[2][4] = 2;
-		E[3][4] = 3;
 		E[1][2] = 1;
+		E[2][4] = 4;
+		E[3][4] = 4;
+		E[4][5] = 2;
+		E[3][6] = 1;
+		E[3][5] = 1;
+		E[6][4] = 1;
+		E[6][7] = 3;
+		E[7][8] = 2;
+		E[8][0] = 6;
 	}
 }
